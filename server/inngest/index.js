@@ -177,7 +177,7 @@ const releaseSeatAfterBooking = inngest.createFunction(
     const tenMinutesLater = new Date(Date.now() + 10 * 60 * 1000);
 
     // ⏳ wait 10 minutes
-    await step.sleepUntil("wait-for-10-minutes", tenMinutesLater);
+    await step.sleep("wait-for-10-minutes", tenMinutesLater);
 
     await step.run("check-payment-status", async () => {
       const bookingId = event.data.bookingId;
