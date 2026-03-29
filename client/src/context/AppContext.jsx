@@ -72,13 +72,32 @@ export const AppProvider = ({children})=>{
                     setfavoriteMovies(data.movies)
 
                 }else{
-                    // toast.error(data.message)
+                    toast.error(data.message)
                 }
         } catch (error) {
             console.log(error);
             
         }
     }
+
+
+    const verifyPayment = async(sessionId)=>{
+        try {
+          const { data } = await axios.post(    
+            "/api/booking/verify-payment",
+            { sessionId },
+            { headers: { Authorization: `Bearer ${await getToken()}` } }
+          );
+            return data;
+
+
+
+        } catch (error) {
+            console.log("Payment verification error:", error);
+            return { success: false, message: error.message };
+        }
+    }   
+
 
     useEffect(()=>{
         fetchShows()
@@ -96,7 +115,7 @@ export const AppProvider = ({children})=>{
         axios,
         fetchIsAdmin,
         user, getToken, navigate, isAdmin, shows,
-        favoriteMovies,fetchFavoriteMovies,image_base_url,fetchShows        
+        favoriteMovies,fetchFavoriteMovies,image_base_url,fetchShows ,verifyPayment       
     
     }
 return (

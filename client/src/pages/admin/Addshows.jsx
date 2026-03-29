@@ -18,20 +18,25 @@ function Addshows() {
   const [showPrice, setshowPrice] = useState("");
   const [addingShow,setaddingShow] = useState(false)
 
+  // console.log("dummy", dummyShowsData);
+
   const fetchNowplayingMovies = async () => {
     // setnowPlayingMovies(dummyShowsData)
-    
+
+        
     
       try {
         const {data} = await axios.get('/api/show/now-playing',{
           headers:{Authorization : `Bearer ${await getToken()}`}})
           if(data.success){
             setnowPlayingMovies(data.movies)
-            console.log(data);
+            console.log("data",data);
             
           }
       } catch (error) {
         console.error('Error fetching movies :',error); 
+        console.log("not");
+        
       }
     }
 
@@ -53,7 +58,7 @@ function Addshows() {
         const {data} = await axios.post('/api/show/add',payload,
           {headers : {Authorization : `Bearer ${await getToken()}`}}
         )
-        // console.log("data", data.success );
+        console.log("data", data.success );
         
         if(data.success){
           toast.success(data.message)

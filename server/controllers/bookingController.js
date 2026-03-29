@@ -1,5 +1,6 @@
 // /Function to check availablity of selected Seats For a movie
 
+import { inngest } from "../inngest/index.js";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import Stripe from "stripe";
@@ -71,7 +72,7 @@ export const createBooking = async (req, res) => {
     ];
   
     const session = await stripeInstance.checkout.sessions.create({
-      success_url: `${origin}/loading/my-booking?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/my-booking?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/my-booking`,
       line_items,
       mode: "payment",
@@ -84,6 +85,15 @@ export const createBooking = async (req, res) => {
 
     booking.paymentLink = session.url;
     await booking.save();
+
+    // Run Inngest Funtion to check payment status after 10 minutes of booking creation
+    await inngest.send({
+      name: "app/checkpayment",
+      data: {
+        bookingId: booking._id.toString()
+      }
+    });
+
 
     res.json({ success: true, url: session.url });
   } catch (error) {
@@ -118,51 +128,59 @@ export const getOccupiedSeats = async (req, res) => {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Initialize Stripe
 
+// export const verifyPayment = async (req, res) => {
+
+//   try {
+//     const { sessionId } = req.body;
+//     const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+//     // Metadata se bookingId nikaalein aur console karein check karne ke liye
+//     const bookingId = session.metadata?.bookingId;
+//     console.log("Processing Payment for Booking ID:", bookingId);
+
+//     if (session.payment_status === "paid") {
+//       const updated = await Booking.findByIdAndUpdate(
+//         bookingId,
+//         { isPaid: true, paymentLink: "" }, // Link empty kar dein taaki user dubara click na kare
+//         { new: true }
+//       ).populate("show");
+
+//       if (updated) {
+//         return res.json({ success: true, message: "Payment verified", booking: updated });
+//       }
+//     }
+    
+//     res.json({ success: false, message: "Payment not completed" });
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// };
+
+
 export const verifyPayment = async (req, res) => {
   try {
     const { sessionId } = req.body;
-
-    if (!sessionId) {
-      return res.status(400).json({ success: false, message: "Session ID missing" });
-    }
-
+    // 1. Stripe se session retrieve karein
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    if (!session || !session.metadata?.bookingId) {
-      return res.status(404).json({ success: false, message: "Invalid session" });
-    }
+    // 2. Metadata se bookingId nikaalein
+    const bookingId = session.metadata?.bookingId;
 
-    const bookingId = session.metadata.bookingId;
-    console.log("Booking ID:", bookingId);
-
-    if (session.payment_status === "paid" || session.status === "completed") {
-      // ✅ Updated booking return karo
+    if (session.payment_status === "paid" && bookingId) {
+      // 3. Database update karein
       const updated = await Booking.findByIdAndUpdate(
         bookingId,
-        { isPaid : true, paymentLink: "" },
-        { new: true } // ✅ Yeh line uncomment karo
-      ).populate("show");
+        { isPaid: true, paymentLink: "" }, // Link delete karein taaki user firse pay na kar sake
+        { new: true }
+      );
 
-      console.log("✅ Booking updated:", updated?._id);
-      return res.json({ 
-        success: true, 
-        message: "Payment verified", 
-        booking: updated // ✅ Updated booking data bhejo
-
-      });
+      if (updated) {
+        return res.json({ success: true, message: "Payment successful!", booking: updated });
+      }
     }
-
-    res.json({ success: false, message: "Payment not completed" });
+    
+    res.json({ success: false, message: "Payment failed or booking not found" });
   } catch (err) {
-    console.error("VERIFY PAYMENT ERROR:", err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
-
-
-
-
-
-
-

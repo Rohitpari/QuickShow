@@ -4,9 +4,13 @@ import Show from "../models/Show.js";
 import Movie from "../models/Movie.js";
 
 export const getNowPlayingMovies = async (req, res) => {
+
+  const tmdburl = "https://api.themoviedb.org/3/movie/now_playing";
+  const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+  const targeturl = proxyUrl + tmdburl;
   try {
     const { data } = await axios.get(
-      "https://api.themoviedb.org/3/movie/now_playing",
+     tmdburl,
       {
         headers: { Authorization: `Bearer ${process.env.TMDB_API_KEY}` },
       }
@@ -20,15 +24,17 @@ export const getNowPlayingMovies = async (req, res) => {
   }
 };
 
+
+
 export const addshow = async (req, res) => {
   try {
     const { movieId, showInput, showPrice } = req.body;
-    // if (!Array.isArray(showInput)) {
-    //         return res.status(400).json({ 
-    //             success: false, 
-    //             message: "Invalid Request Body: 'showInput' must be an array." 
-    //         });
-    //     }
+    if (!Array.isArray(showInput)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Invalid Request Body: 'showInput' must be an array." 
+            });
+        }
     
 
     let movie = await Movie.findById(movieId);
@@ -88,6 +94,98 @@ export const addshow = async (req, res) => {
   }
 };
 
+
+// export const addShow = async (req, res) => {
+//   try {
+//     const { movieId, showInput, showPrice } = req.body;
+
+//     // Validation
+//     if (!movieId || !Array.isArray(showInput) || showInput.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid movieId or showInput"
+//       });
+//     }
+
+//     if (!showPrice || showPrice <= 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid show price"
+//       });
+//     }
+
+//     // Get movie details from TMDB API
+//     const [movieDetails, movieCredits] = await Promise.all([
+//       axios.get(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}`),
+//       axios.get(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${process.env.TMDB_API_KEY}`)
+//     ]);
+
+//     const movieData = movieDetails.data;
+//     const creditsData = movieCredits.data;
+
+//     const movie = {
+//       id: movieData.id,
+//       title: movieData.title,
+//       poster_path: movieData.poster_path,
+//       backdrop_path: movieData.backdrop_path,
+//       release_date: movieData.release_date,
+//       vote_average: movieData.vote_average,
+//       overview: movieData.overview,
+//       genres: movieData.genres,
+//       casts: creditsData.cast.slice(0, 10)
+//     };
+
+//     const showsToCreate = [];
+
+//     // Loop through input
+//     for (const show of showInput) {
+//       const showDate = show.date;
+
+//       for (const time of show.time) {
+//         const dateTime = new Date(`${showDate}T${time}:00`);
+
+//         // Check duplicate show
+//         const existingShow = await Show.findOne({
+//           "movie.id": movieId,
+//           showDateTime: dateTime
+//         });
+
+//         if (!existingShow) {
+//           showsToCreate.push({
+//             movie,
+//             showDateTime: dateTime,
+//             showPrice
+//           });
+//         }
+//       }
+//     }
+
+//     if (showsToCreate.length === 0) {
+//       return res.json({
+//         success: false,
+//         message: "Shows already exist"
+//       });
+//     }
+
+//     await Show.insertMany(showsToCreate);
+
+//     res.json({
+//       success: true,
+//       message: "Shows added successfully"
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server Error"
+//     });
+//   }
+// };
+
+
+
+
 // API TO get show from the database
 
 
@@ -143,3 +241,46 @@ export const getShow = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+// import { HttpsProxyAgent } from 'https-proxy-agent';
+// // import axios from 'axios';
+// // import Show from "../models/Show.js";
+// // import Movie from "../models/Movie.js";
+
+// export const getNowPlayingMovies = async (req, res) => {
+//   try {
+//     // 1. DIRECT TMDB URL (CORS-Anywhere bilkul nahi use karna)
+//     const url = "https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1";
+
+//     // 2. Naya Proxy Agent (Ek naya free proxy IP)
+//     // Agar ye IP kaam na kare, toh 'free-proxy-list.net' se naya IP uthayein
+//     const proxyUrl = 'http://167.172.188.47:80'; 
+//     const agent = new HttpsProxyAgent(proxyUrl);
+
+//     const { data } = await axios.get(url, {
+//       httpsAgent: agent, // Node.js isi agent ka use karke block bypass karega
+//       headers: { 
+//         Authorization: `Bearer ${process.env.TMDB_API_KEY}`,
+//         Accept: 'application/json'
+//       },
+//       timeout: 15000 
+//     });
+
+//     res.json({ success: true, movies: data.results });
+//   } catch (error) {
+//     // Agar yahan 403 aata hai, toh uska matlab Proxy IP expire ho gaya hai
+//     console.error("Connection Error:", error.message);
+//     res.json({ success: false, message: "Proxy error: " + error.message });
+//   }
+// };

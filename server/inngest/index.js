@@ -3,6 +3,8 @@ import { Inngest } from "inngest";
 import mongoose from "mongoose";
 import connectDB from "../configs/db.js";
 import { User } from "../models/User.js";
+import Booking from "../models/Booking.js";
+import Show from "../models/Show.js";
 
 export const inngest = new Inngest({ id: "movie-ticket-booking" });
 
@@ -55,4 +57,36 @@ const syncUserUpdation = inngest.createFunction(
   }
 );
 
-export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdation];
+
+//Inngestt functionto cencel booking and release the seat of show after 10minutes of booning creation if the
+//  booking is not confirmed by user
+
+const releaseSeatAfterBooking = inngest.createFunction(
+  {id: 'release-seat-delete-booking'},
+  {event : "app/checkpayment"},
+
+  async({event,step}) => {
+    const tenMinutesLater = new Date(Date.now() + 10 * 60 *1000)
+    await step.sleepUntil('wait-for-10-minutes',tenMinutesLater)
+
+    await step.run('check-payment-status',async()=>{
+      const bookingId = event.data.bookingId;
+      const booking = await Booking.findById(bookingId)
+
+      // if booking is not paid then release the seat
+      if(!booking.isPaid){
+        const show = await Show.findById(booking.show) ;
+        booking.bookingSeats.forEach((seat)=>{
+          delete show.occupiedSeats[seat];
+        });
+        show.markModified('occupiedSeats');
+        await show.save()
+        await Booking.findByIdAndDelete(booking._id);
+      }
+    })
+  }
+)
+
+export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdation,
+  releaseSeatAfterBooking
+];
