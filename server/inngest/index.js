@@ -214,5 +214,5 @@ export const functions = [
   syncUserCreation,
   syncUserDeletion,
   syncUserUpdation,
-  releaseSeatAfterBooking,
+  // releaseSeatAfterBooking,
 ];
