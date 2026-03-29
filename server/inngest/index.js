@@ -167,52 +167,52 @@ const syncUserUpdation = inngest.createFunction(
 );
 
 // ✅ AUTO CANCEL BOOKING FUNCTION
-// const releaseSeatAfterBooking = inngest.createFunction(
-//   { id: "release-seat-delete-booking" },
-//   { event: "app/checkpayment" },
+const releaseSeatAfterBooking = inngest.createFunction(
+  { id: "release-seat-delete-booking" },
+  { event: "app/checkpayment" },
 
-//   async ({ event, step }) => {
-//     await ensureDB();
+  async ({ event, step }) => {
+    await ensureDB();
 
-//     const tenMinutesLater = new Date(Date.now() + 1 * 60 * 1000);
+    const tenMinutesLater = new Date(Date.now() + 10 * 60 * 1000);
 
-//     // ⏳ wait 10 minutes
-//     await step.sleepUntil("wait-for-10-minutes", tenMinutesLater);
+    // ⏳ wait 10 minutes
+    await step.sleepUntil("wait-for-10-minutes", tenMinutesLater);
 
-//     await step.run("check-payment-status", async () => {
-//       const bookingId = event.data.bookingId;
+    await step.run("check-payment-status", async () => {
+      const bookingId = event.data.bookingId;
 
-//       const booking = await Booking.findById(bookingId);
+      const booking = await Booking.findById(bookingId);
 
-//       // ✅ safety check
-//       if (!booking) return;
+      // ✅ safety check
+      if (!booking) return;
 
-//       // ❌ if not paid → release seats
-//       if (!booking.isPaid) {
-//         const show = await Show.findById(booking.show);
+      // ❌ if not paid → release seats
+      if (!booking.isPaid) {
+        const show = await Show.findById(booking.show);
 
-//         if (!show) return;
+        if (!show) return;
 
-//         // ✅ FIXED: bookedSeats (not bookindSeats ❌)
-//         booking.bookedSeats.forEach((seat) => {
-//           delete show.occupiedSeats[seat];
-//         });
+        // ✅ FIXED: bookedSeats (not bookindSeats ❌)
+        booking.bookedSeats.forEach((seat) => {
+          delete show.occupiedSeats[seat];
+        });
 
-//         show.markModified("occupiedSeats");
-//         await show.save();
+        show.markModified("occupiedSeats");
+        await show.save();
 
-//         await Booking.findByIdAndDelete(booking._id);
+        await Booking.findByIdAndDelete(booking._id);
 
-//         console.log("❌ Booking expired, seats released");
-//       }
-//     });
-//   }
-// );
+        console.log("❌ Booking expired, seats released");
+      }
+    });
+  }
+);
 
 // ✅ EXPORT ALL FUNCTIONS
 export const functions = [
   syncUserCreation,
   syncUserDeletion,
   syncUserUpdation,
-  // releaseSeatAfterBooking,
+  releaseSeatAfterBooking,
 ];
