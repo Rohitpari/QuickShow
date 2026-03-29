@@ -50,6 +50,7 @@
 
 import Stripe from "stripe";
 import Booking from "../models/Booking.js";
+import { inngest } from "../inngest/index.js";
 
 export const stripeWebhook = async (req, res) => {
     console.log("🔔 Stripe Webhook Received");
@@ -87,6 +88,14 @@ export const stripeWebhook = async (req, res) => {
                         isPaid: true,
                         paymentLink: "",
                     },
+
+                    //send confirmatioon email
+
+                    await inngest.send({
+                        name : "app/show.booked",
+                        data : {bookingId}
+                    }),
+
                     { new: true } // Update hua data wapas pane ke liye
                 );
 

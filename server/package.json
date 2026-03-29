@@ -23,6 +23,7 @@
     "inngest": "^3.40.2",
     "missing": "^0.0.1",
     "mongoose": "^8.18.0",
+    "nodemailer": "^8.0.4",
     "stripe": "^19.1.0",
     "svix": "^1.76.1"
   },
