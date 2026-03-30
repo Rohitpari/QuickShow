@@ -12,18 +12,15 @@ const transporter = nodemailer.createTransport({
 });
 
 
-const sendEmail = async (to, subject, body) => {
-
+// configs/nodeMailer.js
+const sendEmail = async (to, subject, htmlContent) => {
     const response = await transporter.sendMail({
         from: process.env.SENDER_EMAIL,
         to,
         subject,
-        html  : body, 
-    })
-
- 
-    return response;    
-  
+        html: htmlContent, // ✅ Nodemailer ko yahan 'html' key hi chahiye
+    });
+    return response;  
 };
 
 export default sendEmail;

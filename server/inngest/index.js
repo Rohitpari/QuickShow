@@ -212,44 +212,85 @@ const releaseSeatAfterBooking = inngest.createFunction(
 
 //Inngest Function to send Email when user books a show 
 
-const sendBookingConfirmationEmail = inngest.createFunction(
-  {id:"send-booking-confirmation-email"},
-  {event : "app/show.booked"},
+// const sendBookingConfirmationEmail = inngest.createFunction(
+//   {id:"send-booking-confirmation-email"},
+//   {event : "app/show.booked"},
 
-  async({event,step})=>{
+//   async({event,step})=>{
+//     await ensureDB();
+//     const {bookingId} = event.data;
+//     const booking = await Booking.findById(bookingId).populate({
+//       path : "show",
+//       populate : {path : "movie",model : "movie"}
+//     }).populate("user");
+
+
+//     await sendEmail({
+//       to : booking.user.email,
+//       subject : `Payment Confirmation : "${booking.show.movie.title}" booked!`,
+//       body : `<div style ="font-family : Arial,sans-serif; line-height: 1.6;">
+//       <h2> Hi ${booking.user.name}!</h2>
+//       <p> your booking for <strong style = "color : #f84565;">${booking.show.movie.title}</strong> is confirmed. </p>
+      
+//       <p>
+//       <strong> Date : </strong> ${new Date(booking.show.showDateTime).toLocaleDateString('en-US',{timeZone:"Asia/Kolkata"})} <br/>
+//       <strong> Time : </strong> ${new Date(booking.show.showDateTime).toLocaleTimeString('en-US',{timeZone:"Asia/Kolkata"})}
+//       </p>
+
+//       <p> Enjoy the show!</p>
+//       <p> Thanks for booking with us!<br/>-- QuickShow Team </p>
+//       </div>
+//       `
+      
+//     })
+//   }
+// )
+
+
+const sendBookingConfirmationEmail = inngest.createFunction(
+  { id: "send-booking-confirmation-email" },
+  { event: "app/show.booked" },
+
+  async ({ event, step }) => {
     await ensureDB();
-    const {bookingId} = event.data;
+    const { bookingId } = event.data;
+
+    // 1. Booking aur User data fetch karein
     const booking = await Booking.findById(bookingId).populate({
-      path : "show",
-      populate : {path : "movie",model : "movie"}
+      path: "show",
+      populate: { path: "movie", model: "movie" }
     }).populate("user");
 
+    if (!booking || !booking.user) {
+      console.log("❌ Booking or User not found");
+      return;
+    }
 
-    await sendEmail({
-      to : booking.user.email,
-      subject : `Payment Confirmation  : "${booking.show.movie.title}" booked!`,
-      body : `<div style ="font-family : Arial,sans-serif; line-height: 1.6;">
-      <h2> Hi ${booking.user.name}!</h2>
-      <p> your booking for <strong style = "color : #f84565;">${booking.show.movie.title}</strong> is confirmed. </p>
-      
-      <p>
-      <strong> Date : </strong> ${new Date(booking.show.showDateTime).toLocaleDateString('en-US',{timeZone:"Asia/Kolkata"})} <br/>
-      <strong> Time : </strong> ${new Date(booking.show.showDateTime).toLocaleTimeString('en-US',{timeZone:"Asia/Kolkata"})}
-      </p>
+    // 2. Email Body taiyar karein
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #f84565;">Hi ${booking.user.name}!</h2>
+        <p>Your booking for <strong>${booking.show.movie.title}</strong> is confirmed.</p>
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+          <p style="margin: 0;"><strong>Date:</strong> ${new Date(booking.show.showDateTime).toLocaleDateString('en-IN', { timeZone: "Asia/Kolkata" })}</p>
+          <p style="margin: 0;"><strong>Time:</strong> ${new Date(booking.show.showDateTime).toLocaleTimeString('en-IN', { timeZone: "Asia/Kolkata" })}</p>
+          <p style="margin: 0;"><strong>Seats:</strong> ${booking.bookedSeats.join(", ")}</p>
+        </div>
+        <p>Enjoy the show!</p>
+        <p>Thanks for booking with us!<br/>-- <strong>QuickShow Team</strong></p>
+      </div>`;
 
-      <p> Enjoy the show!</p>
-      <p> Thanks for booking with us!<br/>-- QuickShow Team </p>
-      </div>
-      `
-      
-    })
-
-
+    // 3. Email Bhejein (Using step.run for reliability)
+    await step.run("send-confirmation-email", async () => {
+      // ✅ Yahan humne curly braces {} hata diye hain
+      return await sendEmail(
+        booking.user.email, 
+        `Payment Confirmation: "${booking.show.movie.title}" booked!`, 
+        emailHtml
+      );
+    });
   }
-
-
-
-)
+);
 
 
 // ✅ EXPORT ALL FUNCTIONS

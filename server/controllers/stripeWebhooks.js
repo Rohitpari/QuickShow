@@ -88,16 +88,18 @@ export const stripeWebhook = async (req, res) => {
                         isPaid: true,
                         paymentLink: "",
                     },
+                    { new: true } // Update hua data wapas pane ke liye
+                );
+
+
 
                     //send confirmatioon email
 
                     await inngest.send({
                         name: "app/show.booked",
                         data: { bookingId },
-                    }),
+                    });
 
-                    { new: true } // Update hua data wapas pane ke liye
-                );
 
                 if (updatedBooking) {
                     console.log(`✅ Booking ${bookingId} successfully marked as PAID via Webhook.`);
