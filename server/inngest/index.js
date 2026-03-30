@@ -217,6 +217,7 @@ const sendBookingConfirmationEmail = inngest.createFunction(
   {event : "app/show.booked"},
 
   async({event,step})=>{
+    await ensureDB();
     const {bookingId} = event.data;
     const booking = await Booking.findById(bookingId).populate({
       path : "show",
@@ -232,8 +233,8 @@ const sendBookingConfirmationEmail = inngest.createFunction(
       <p> your booking for <strong style = "color : #f84565;">${booking.show.movie.title}</strong> is confirmed. </p>
       
       <p>
-      <strong> Date : </strong> ${new Date(booking.show.showDateTime).toLocaleDateString('en-US',{timeZone:Asia/Kolkata})} <br/>
-      <strong> Time : </strong> ${new Date(booking.show.showDateTime).toLocaleTimeString('en-US',{timeZone:Asia/Kolkata})}
+      <strong> Date : </strong> ${new Date(booking.show.showDateTime).toLocaleDateString('en-US',{timeZone:"Asia/Kolkata"})} <br/>
+      <strong> Time : </strong> ${new Date(booking.show.showDateTime).toLocaleTimeString('en-US',{timeZone:"Asia/Kolkata"})}
       </p>
 
       <p> Enjoy the show!</p>

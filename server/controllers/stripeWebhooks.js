@@ -92,8 +92,8 @@ export const stripeWebhook = async (req, res) => {
                     //send confirmatioon email
 
                     await inngest.send({
-                        name : "app/show.booked",
-                        data : {bookingId}
+                        name: "app/show.booked",
+                        data: { bookingId },
                     }),
 
                     { new: true } // Update hua data wapas pane ke liye
