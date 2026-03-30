@@ -46,7 +46,7 @@ export const createBooking = async (req, res) => {
       show: showId,
       amount: showData.showPrice * selectedSeats.length,
       bookedSeats: selectedSeats,
-      isPaid : false,
+      isPaid: false,
     });
     selectedSeats.map((seat) => {
       showData.occupiedSeats[seat] = userId;
@@ -70,7 +70,7 @@ export const createBooking = async (req, res) => {
         quantity: 1,
       },
     ];
-  
+
     const session = await stripeInstance.checkout.sessions.create({
       success_url: `${origin}/my-booking?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/my-booking`,
@@ -90,10 +90,9 @@ export const createBooking = async (req, res) => {
     await inngest.send({
       name: "app/checkpayment",
       data: {
-        bookingId: booking._id.toString()
-      }
+        bookingId: booking._id.toString(),
+      },
     });
-
 
     res.json({ success: true, url: session.url });
   } catch (error) {
@@ -119,9 +118,6 @@ export const getOccupiedSeats = async (req, res) => {
       .json({ success: false, message: "Server Error fetching seats." });
   }
 };
-
-
-
 
 // import Stripe from "stripe";
 // import Booking from "../models/Booking.js";
@@ -149,13 +145,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // Initialize Stripe
 //         return res.json({ success: true, message: "Payment verified", booking: updated });
 //       }
 //     }
-    
+
 //     res.json({ success: false, message: "Payment not completed" });
 //   } catch (err) {
 //     res.status(500).json({ success: false, message: err.message });
 //   }
 // };
-
 
 export const verifyPayment = async (req, res) => {
   try {
@@ -171,15 +166,29 @@ export const verifyPayment = async (req, res) => {
       const updated = await Booking.findByIdAndUpdate(
         bookingId,
         { isPaid: true, paymentLink: "" }, // Link delete karein taaki user firse pay na kar sake
-        { new: true }
+        { new: true },
       );
 
+
+      //for sending confirmation email after payment successfull
+      await inngest.send({
+        name: "app/show.booked",
+        data: { bookingId },
+      });
+
       if (updated) {
-        return res.json({ success: true, message: "Payment successful!", booking: updated });
+        return res.json({
+          success: true,
+          message: "Payment successful!",
+          booking: updated,
+        });
       }
     }
-    
-    res.json({ success: false, message: "Payment failed or booking not found" });
+
+    res.json({
+      success: false,
+      message: "Payment failed or booking not found",
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
