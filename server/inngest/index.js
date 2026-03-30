@@ -253,7 +253,9 @@ const sendBookingConfirmationEmail = inngest.createFunction(
   { event: "app/show.booked" },
 
   async ({ event, step }) => {
+    console.log("1. Starting Function");
     await ensureDB();
+    console.log("2. DB Connected");
     const { bookingId } = event.data;
 
     // 1. Booking aur User data fetch karein
@@ -261,6 +263,7 @@ const sendBookingConfirmationEmail = inngest.createFunction(
       path: "show",
       populate: { path: "movie", model: "Movie" }
     }).populate("user");
+    console.log("3. Booking Data Fetched:", booking?.user?.email);
 
     if (!booking || !booking.user) {
       console.log("❌ Booking or User not found");
@@ -283,6 +286,7 @@ const sendBookingConfirmationEmail = inngest.createFunction(
 
     // 3. Email Bhejein (Using step.run for reliability)
     await step.run("send-confirmation-email", async () => {
+      console.log("4. Sending Email via Nodemailer...");
       // ✅ Yahan humne curly braces {} hata diye hain
       return await sendEmail(
         booking.user.email, 
