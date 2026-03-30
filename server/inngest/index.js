@@ -104,6 +104,7 @@ import { User } from "../models/User.js";
 import Booking from "../models/Booking.js";
 import Show from "../models/Show.js";
 import sendEmail from "../configs/nodeMailer.js";
+import Movie from "../models/Movie.js";
 
 // ✅ IMPORTANT: eventKey add karo
 export const inngest = new Inngest({
@@ -258,7 +259,7 @@ const sendBookingConfirmationEmail = inngest.createFunction(
     // 1. Booking aur User data fetch karein
     const booking = await Booking.findById(bookingId).populate({
       path: "show",
-      populate: { path: "movie", model: "movie" }
+      populate: { path: "movie", model: "Movie" }
     }).populate("user");
 
     if (!booking || !booking.user) {
