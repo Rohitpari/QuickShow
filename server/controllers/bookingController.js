@@ -171,18 +171,24 @@ export const verifyPayment = async (req, res) => {
 
 
       //for sending confirmation email after payment successfull
+
+      if (updated) {
+
+        console.log("Booking updated, sending Inngest event...");
+        
       await inngest.send({
         name: "app/show.booked",
         data: { bookingId : bookingId.toString() },
       });
+    }
 
-      if (updated) {
+      
         return res.json({
           success: true,
           message: "Payment successful!",
           booking: updated,
         });
-      }
+      
     }
 
     res.json({
