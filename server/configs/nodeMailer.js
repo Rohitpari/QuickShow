@@ -7,8 +7,8 @@ dotenv.config();
 
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
-  port: 465, // Port 465 best hai Render ke liye
-  secure: true, // Port 465 ke saath true rahega
+  port: 587, // Port 587 best hai Render ke liye
+  secure: false, // Port 587 ke saath false rahega
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
