@@ -173,7 +173,7 @@ export const verifyPayment = async (req, res) => {
       //for sending confirmation email after payment successfull
       await inngest.send({
         name: "app/show.booked",
-        data: { bookingId },
+        data: { bookingId : bookingId.toString() },
       });
 
       if (updated) {
