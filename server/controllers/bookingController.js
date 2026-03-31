@@ -178,7 +178,7 @@ export const verifyPayment = async (req, res) => {
         
       await inngest.send({
         "name": "app/show.booked",
-        "data": { "bookingId" : "69ca0ffe3b0ad5d949a9bbc6" },
+        "data": { "bookingId": updated._id.toString()  },
       });
     }
 
