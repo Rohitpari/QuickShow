@@ -37,35 +37,32 @@
 
 
 
-import nodemailer from "nodemailer";
+// import nodemailer from "nodemailer";
+
+import fetch from "node-fetch";
 
 const sendEmail = async (to, subject, body) => {
-  const transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 465, 
-    secure: true, 
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": process.env.BREVO_API_KEY,
     },
-    connectionTimeout: 30000, // 30 seconds wait
+    body: JSON.stringify({
+      sender: { name: "QuickShow", email: process.env.SENDER_EMAIL },
+      to: [{ email: to }],
+      subject: subject,
+      htmlContent: body,
+    }),
   });
 
-  const mailOptions = {
-    from: `"QuickShow" <${process.env.SENDER_EMAIL}>`,
-    to,
-    subject,
-    html: body,
-  };
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent: " + info.response);
-    return { success: true, message: "Email sent successfully" };
-  } catch (error) {
-    console.error("❌ Nodemailer Error:", error);
-    throw error; 
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(JSON.stringify(err));
   }
+
+  console.log("✅ Email sent via Brevo API");
+  return { success: true };
 };
 
 export default sendEmail;
